@@ -60,41 +60,55 @@ https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/package-s
 */
 
 
+
 public class AnimalOrNotDL4J {
 
-    // 🟦 Tune these
+    // Basic classifier settings:
+    // TOP_K = how many of the model's best guesses we want to inspect
+    // MIN_ANIMAL_SCORE = minimum combined confidence needed before we call something an animal
     private static final int TOP_K = 12;
     private static final double MIN_ANIMAL_SCORE = 0.12; // if too low -> "not an animal"
 
     public static void main(String[] args) throws Exception {
+
+        // Make sure the user gives exactly one image path when running the program
         if (args.length != 1) {
             System.out.println("Usage: java AnimalOrNotDL4J /path/to/image.jpg");
             System.exit(1);
         }
 
+        // Create a File object from the command-line argument
         File imageFile = new File(args[0]);
-        if (!imageFile.exists()) throw new IllegalArgumentException("File not found: " + imageFile);
 
-        // 1) Pretrained ResNet50 (ImageNet)
-        //ZooModel<ComputationGraph> zooModel = ResNet50.builder().build();
-        //ComputationGraph model = zooModel.initPretrained(); // downloads weights first time
+        // Stop early if the file does not exist
+        if (!imageFile.exists()) {
+            throw new IllegalArgumentException("File not found: " + imageFile);
+        }
 
+        // 1) Load a pretrained ResNet50 model
+        // ResNet50 is already trained on ImageNet, so we do not train our own model here.
+        // We are reusing an existing model and asking it to classify our image.
         ZooModel<?> zooModel = ResNet50.builder().build();
         Model model = zooModel.initPretrained();
-        
-        // 2) Load image (even if 128x128, resize to 224x224 for ResNet50)
+
+        // 2) Load and resize the image
+        // ResNet50 expects images in 224x224 resolution with 3 color channels (RGB).
         int height = 224, width = 224, channels = 3;
         NativeImageLoader loader = new NativeImageLoader(height, width, channels);
         INDArray image = loader.asMatrix(imageFile);
-        
-        
+
+        // 3) Preprocess the image
+        // This step transforms pixel values into the format expected by the pretrained network.
+        // We use the same preprocessing style commonly used for ImageNet/VGG-style models.
         VGG16ImagePreProcessor scaler = new VGG16ImagePreProcessor();
         scaler.transform(image);
-       
-        
-        // 4) Predict (1000 ImageNet classes)
+
+        // 4) Run the image through the model to get prediction probabilities
+        // The output is a vector of probabilities across the 1000 ImageNet classes.
         INDArray probs;
 
+        // Different pretrained models can be stored as different DL4J model types,
+        // so we check which one we got and run prediction the correct way.
         if (model instanceof ComputationGraph) {
             probs = ((ComputationGraph) model).outputSingle(image);
         } else if (model instanceof MultiLayerNetwork) {
@@ -102,23 +116,32 @@ public class AnimalOrNotDL4J {
         } else {
             throw new RuntimeException("Unknown model type: " + model.getClass());
         }
-        
-        
+
+        // Convert the output probabilities into a regular Java double array
+        // This makes it easier to sort and inspect.
         double[] p = probs.toDoubleVector();
 
-        // 5) Decode top-K labels
+        // 5) Decode the top-K labels
+        // ImageNetLabels lets us convert class indices like 341 into readable names like "hog".
         ImageNetLabels labels = new ImageNetLabels();
+
+        // Get the indices of the top K highest probabilities
         int[] topK = topKIndices(p, TOP_K);
 
+        // Print the model's raw best guesses
+        // This helps us debug and understand what the network is seeing.
         System.out.println("Top " + TOP_K + " raw ImageNet guesses:");
         for (int i = 0; i < topK.length; i++) {
             int idx = topK[i];
             System.out.printf("  #%d  %-35s  %.4f%n", i + 1, labels.getLabel(idx), p[idx]);
         }
 
-        // 6) Animal-vs-not decision using keyword mapping
+        // 6) Convert ImageNet guesses into our simpler "animal or not" decision
+        // Instead of trusting one exact label, we group similar labels together
+        // and sum their probabilities.
         AnimalResult result = classifyAnimalFromTopK(topK, p, labels);
 
+        // Print the final simplified result
         System.out.println("\n✅ Final decision:");
         if (result.isAnimal) {
             System.out.printf("  ANIMAL: %s (score=%.4f)%n", result.animalName, result.score);
@@ -129,10 +152,15 @@ public class AnimalOrNotDL4J {
 
     // ------------------ Animal mapping logic ------------------
 
+    // This helper class stores our final simplified classification result.
+    // isAnimal = true/false
+    // animalName = best-matching animal category
+    // score = combined probability score for that animal
     private static class AnimalResult {
         boolean isAnimal;
-        String animalName;   // e.g. "elephant"
-        double score;        // summed probability mass from matching labels
+        String animalName;
+        double score;
+
         AnimalResult(boolean isAnimal, String animalName, double score) {
             this.isAnimal = isAnimal;
             this.animalName = animalName;
@@ -142,71 +170,97 @@ public class AnimalOrNotDL4J {
 
     private static AnimalResult classifyAnimalFromTopK(int[] topK, double[] p, ImageNetLabels labels) {
 
-        // 🟧 Start with "just a few animals" by keeping only a few entries here.
-        // You can uncomment/extend anytime. 
-
+        // This map defines our custom animal categories.
+        // Key = final label we want to report
+        // Value = keywords that count as evidence for that animal
+        //
+        // Example:
+        // If ImageNet predicts "hog" or "wild boar",
+        // we want to treat both as evidence for "pig".
         Map<String, List<String>> animalKeywords = new LinkedHashMap<>();
 
-        // --- STARTER SET (few animals) ---
+        // --- STARTER SET ---
         animalKeywords.put("elephant", Arrays.asList("elephant"));
-        animalKeywords.put("cat", Arrays.asList("tabby", "tiger cat", "persian cat", "siamese cat", "egyptian cat", "cat"));
-        animalKeywords.put("dog", Arrays.asList("retriever", "terrier", "shepherd", "pug", "beagle", "husky", "dog"));
-        animalKeywords.put("horse", Arrays.asList("horse", "sorrel", "zebra")); // (zebra is separate too—see below)
-        animalKeywords.put("bird", Arrays.asList("bird", "hen", "cock", "eagle", "hawk", "ostrich", "penguin", "flamingo"));
+        animalKeywords.put("cat", Arrays.asList(
+                "tabby", "tiger cat", "persian cat", "siamese cat", "egyptian cat", "cat"));
+        animalKeywords.put("dog", Arrays.asList(
+                "retriever", "terrier", "shepherd", "pug", "beagle", "husky", "dog"));
+        animalKeywords.put("horse", Arrays.asList(
+                "horse", "sorrel", "zebra")); // note: zebra also appears separately below
+        animalKeywords.put("bird", Arrays.asList(
+                "bird", "hen", "cock", "eagle", "hawk", "ostrich", "penguin", "flamingo"));
 
-        // --- EASY EXPANSION (10+ animals) ---
-         animalKeywords.put("cow", Arrays.asList("cow", "ox", "bull", "bison"));
-         animalKeywords.put("sheep", Arrays.asList("sheep", "ram"));
-         animalKeywords.put("pig", Arrays.asList("hog", "boar", "pig"));
-         animalKeywords.put("bear", Arrays.asList("bear", "brown bear", "black bear", "polar bear"));
-         animalKeywords.put("lion", Arrays.asList("lion"));
-         animalKeywords.put("tiger", Arrays.asList("tiger"));
-         animalKeywords.put("giraffe", Arrays.asList("giraffe"));
-         animalKeywords.put("zebra", Arrays.asList("zebra"));
+        // --- EXPANDED SET ---
+        animalKeywords.put("cow", Arrays.asList("cow", "ox", "bull", "bison"));
+        animalKeywords.put("sheep", Arrays.asList("sheep", "ram"));
+        animalKeywords.put("pig", Arrays.asList("hog", "boar", "pig"));
+        animalKeywords.put("bear", Arrays.asList("bear", "brown bear", "black bear", "polar bear"));
+        animalKeywords.put("lion", Arrays.asList("lion"));
+        animalKeywords.put("tiger", Arrays.asList("tiger"));
+        animalKeywords.put("giraffe", Arrays.asList("giraffe"));
+        animalKeywords.put("zebra", Arrays.asList("zebra"));
 
-        // Score each animal by summing probability of any matching labels found in topK
+        // Track the best-scoring animal category
         String bestAnimal = null;
         double bestScore = 0.0;
 
+        // For each animal category, sum the probabilities of any top-K labels
+        // whose names contain one of that animal's keywords.
         for (Map.Entry<String, List<String>> entry : animalKeywords.entrySet()) {
             String animal = entry.getKey();
             List<String> keys = entry.getValue();
 
             double score = 0.0;
+
             for (int idx : topK) {
                 String lab = labels.getLabel(idx).toLowerCase();
+
                 for (String k : keys) {
                     if (lab.contains(k.toLowerCase())) {
                         score += p[idx];
-                        break;
+                        break; // stop checking more keywords once one matches
                     }
                 }
             }
 
+            // Keep whichever animal category has the highest total score
             if (score > bestScore) {
                 bestScore = score;
                 bestAnimal = animal;
             }
         }
 
-        // Decision: if our best animal score is too low => "not an animal"
+        // Final rule:
+        // If the best animal score is below our threshold,
+        // we decide the image is "not an animal."
         if (bestAnimal == null || bestScore < MIN_ANIMAL_SCORE) {
             return new AnimalResult(false, null, bestScore);
         }
+
         return new AnimalResult(true, bestAnimal, bestScore);
     }
 
     // ------------------ Helpers ------------------
 
     private static int[] topKIndices(double[] arr, int k) {
+
+        // Build an array of indices: [0, 1, 2, ..., arr.length-1]
         Integer[] idx = new Integer[arr.length];
-        for (int i = 0; i < arr.length; i++) idx[i] = i;
+        for (int i = 0; i < arr.length; i++) {
+            idx[i] = i;
+        }
 
-        Arrays.sort(idx, (a, b) -> Double.compare(arr[b], arr[a])); // desc
+        // Sort the indices based on the probability values in descending order
+        // Highest probability comes first
+        Arrays.sort(idx, (a, b) -> Double.compare(arr[b], arr[a]));
 
+        // Take only the first k indices, or fewer if the array is smaller
         int n = Math.min(k, idx.length);
         int[] out = new int[n];
-        for (int i = 0; i < n; i++) out[i] = idx[i];
+        for (int i = 0; i < n; i++) {
+            out[i] = idx[i];
+        }
+
         return out;
     }
 }
