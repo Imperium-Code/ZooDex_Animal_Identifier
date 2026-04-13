@@ -69,22 +69,11 @@ public class AnimalOrNotDL4J {
     private static final int TOP_K = 12;
     private static final double MIN_ANIMAL_SCORE = 0.12; // if too low -> "not an animal"
 
-    public static void main(String[] args) throws Exception {
 
-        // Make sure the user gives exactly one image path when running the program
-        if (args.length != 1) {
-            System.out.println("Usage: java AnimalOrNotDL4J /path/to/image.jpg");
-            System.exit(1);
-        }
 
-        // Create a File object from the command-line argument
-        File imageFile = new File(args[0]);
+    // ------------------ Animal mapping logic ------------------
 
-        // Stop early if the file does not exist
-        if (!imageFile.exists()) {
-            throw new IllegalArgumentException("File not found: " + imageFile);
-        }
-
+    public static ClassificationResult classifyImage(File imageFile) throws Exception {
         // 1) Load a pretrained ResNet50 model
         // ResNet50 is already trained on ImageNet, so we do not train our own model here.
         // We are reusing an existing model and asking it to classify our image.
@@ -128,47 +117,46 @@ public class AnimalOrNotDL4J {
         // Get the indices of the top K highest probabilities
         int[] topK = topKIndices(p, TOP_K);
 
-        // Print the model's raw best guesses
-        // This helps us debug and understand what the network is seeing.
-        System.out.println("Top " + TOP_K + " raw ImageNet guesses:");
-        for (int i = 0; i < topK.length; i++) {
-            int idx = topK[i];
-            System.out.printf("  #%d  %-35s  %.4f%n", i + 1, labels.getLabel(idx), p[idx]);
-        }
-
         // 6) Convert ImageNet guesses into our simpler "animal or not" decision
         // Instead of trusting one exact label, we group similar labels together
         // and sum their probabilities.
         AnimalResult result = classifyAnimalFromTopK(topK, p, labels);
 
-        // Print the final simplified result
-        System.out.println("\n✅ Final decision:");
-        if (result.isAnimal) {
-            System.out.printf("  ANIMAL: %s (score=%.4f)%n", result.animalName, result.score);
-        } else {
-            System.out.printf("  NOT AN ANIMAL (best animal score=%.4f)%n", result.score);
-        }
+        return new ClassificationResult(result, topK, p, labels);
     }
-
-    // ------------------ Animal mapping logic ------------------
 
     // This helper class stores our final simplified classification result.
     // isAnimal = true/false
     // animalName = best-matching animal category
     // score = combined probability score for that animal
-    private static class AnimalResult {
-        boolean isAnimal;
-        String animalName;
-        double score;
+    public static class AnimalResult {
+        public boolean isAnimal;
+        public String animalName;
+        public double score;
 
-        AnimalResult(boolean isAnimal, String animalName, double score) {
+        public AnimalResult(boolean isAnimal, String animalName, double score) {
             this.isAnimal = isAnimal;
             this.animalName = animalName;
             this.score = score;
         }
     }
 
-    private static AnimalResult classifyAnimalFromTopK(int[] topK, double[] p, ImageNetLabels labels) {
+    // Class to hold the full classification result including raw data for debugging
+    public static class ClassificationResult {
+        public AnimalResult animalResult;
+        public int[] topKIndices;
+        public double[] probabilities;
+        public ImageNetLabels labels;
+
+        public ClassificationResult(AnimalResult animalResult, int[] topKIndices, double[] probabilities, ImageNetLabels labels) {
+            this.animalResult = animalResult;
+            this.topKIndices = topKIndices;
+            this.probabilities = probabilities;
+            this.labels = labels;
+        }
+    }
+
+    public static AnimalResult classifyAnimalFromTopK(int[] topK, double[] p, ImageNetLabels labels) {
 
         // This map defines our custom animal categories.
         // Key = final label we want to report
@@ -242,7 +230,7 @@ public class AnimalOrNotDL4J {
 
     // ------------------ Helpers ------------------
 
-    private static int[] topKIndices(double[] arr, int k) {
+    public static int[] topKIndices(double[] arr, int k) {
 
         // Build an array of indices: [0, 1, 2, ..., arr.length-1]
         Integer[] idx = new Integer[arr.length];
