@@ -1,0 +1,278 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 800px;
+    height: 480px;
+    overflow: hidden; /* No scrolling allowed */
+    background-color: #000;
+    /* Uses base system monospaced fonts to avoid external CDNs */
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* --- Loading Screen --- */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 480px;
+    background-color: #111;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    transition: opacity 1s ease-out;
+}
+
+#loading-image {
+    max-width: 60%;
+    max-height: 60%;
+    object-fit: contain;
+    margin-bottom: 20px;
+}
+
+.loader p {
+    color: #fff;
+    margin-top: 10px;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* --- Main UI --- */
+#main-ui {
+    width: 800px;
+    height: 480px;
+    display: flex;
+    background-color: #dc0a2d; /* Pokedex Red */
+    transition: opacity 0.5s ease-in;
+}
+
+/* Panels */
+.left-panel {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid #8b0000;
+}
+
+.hinge {
+    width: 30px;
+    height: 100%;
+    background: linear-gradient(to right, #8b0000, #ff1a1a, #8b0000);
+    border-left: 1px solid #5a0000;
+    border-right: 1px solid #5a0000;
+}
+
+.right-panel {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* --- Left Panel UI --- */
+.led-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.led-big-blue {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #28a745;
+    background: radial-gradient(circle at 30% 30%, #5ce1e6, #007bff);
+    border: 4px solid #fff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.8);
+}
+
+.led-small {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #555;
+}
+.led-small.red { background-color: #ff0000; box-shadow: 0 0 5px #ff0000; }
+.led-small.yellow { background-color: #ffcc00; box-shadow: 0 0 5px #ffcc00; }
+.led-small.green { background-color: #33cc33; box-shadow: 0 0 5px #33cc33; }
+
+.camera-bezel {
+    background-color: #dedede;
+    border-radius: 10px 10px 10px 40px;
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+}
+
+.camera-screen {
+    width: 100%;
+    height: 100%;
+    background-color: #222;
+    border-radius: 5px;
+    border: 3px solid #444;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.placeholder-text {
+    color: #666;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+#scanner-line {
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background-color: #00ffcc;
+    box-shadow: 0 0 10px #00ffcc;
+    display: none;
+}
+
+@keyframes scanAnim {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+}
+
+.primary-controls {
+    display: flex;
+    justify-content: center;
+}
+
+.dex-btn {
+    background-color: #333;
+    color: #fff;
+    border: 2px solid #222;
+    padding: 10px 30px;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 5px 0 #111;
+}
+
+.dex-btn:active {
+    transform: translateY(5px);
+    box-shadow: none;
+}
+
+.dex-btn.highlight {
+    background-color: #ffcc00;
+    color: #000;
+    border-color: #b38f00;
+    box-shadow: 0 5px 0 #b38f00;
+}
+
+/* --- Right Panel UI --- */
+.data-screen {
+    background-color: #51ae5e;
+    border: 4px solid #336b3b;
+    border-radius: 5px;
+    height: 200px;
+    padding: 15px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    margin-bottom: 20px;
+    color: #000;
+}
+
+#animal-name {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.type-badge {
+    background-color: #333;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}
+
+#animal-desc {
+    margin-top: 15px;
+    font-size: 1rem;
+    line-height: 1.3;
+    overflow-y: auto;
+    height: 90px;
+}
+
+.grid-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.grid-btn {
+    height: 30px;
+    background-color: #0099ff;
+    border: 2px solid #005c99;
+    border-radius: 3px;
+    box-shadow: 0 2px 0 #005c99;
+}
+
+.bottom-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.d-pad {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    margin-right: 20px;
+}
+
+.d-up, .d-down, .d-left, .d-right, .d-center {
+    position: absolute;
+    background-color: #222;
+    box-shadow: inset 0 0 5px #000;
+}
+
+.d-center { width: 30px; height: 30px; top: 30px; left: 30px; border-radius: 2px; }
+.d-up { width: 30px; height: 30px; top: 0; left: 30px; border-radius: 5px 5px 0 0; }
+.d-down { width: 30px; height: 30px; top: 60px; left: 30px; border-radius: 0 0 5px 5px; }
+.d-left { width: 30px; height: 30px; top: 30px; left: 0; border-radius: 5px 0 0 5px; }
+.d-right { width: 30px; height: 30px; top: 30px; left: 60px; border-radius: 0 5px 5px 0; }
