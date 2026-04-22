@@ -1,95 +1,41 @@
 package com.cs420;
 
-import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
-import javafx.application.Application;
-import javafx.application.Platform;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.InputStream;
-
-public class ZooDexGUI extends Application {
+public class ZooDexGUI {
 
     private boolean isScanning = false;
+    private Scene scene;
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("ZooDex (JavaFX Edition)");
+    public ZooDexGUI(Stage stage) {
 
         StackPane root = new StackPane();
         root.getStyleClass().add("root");
 
-        // 1. MAIN UI PANE (hidden at first)
-        HBox mainUI = createMainUI();
-        mainUI.setOpacity(0); // Hidden
+        // 1. MAIN UI PANE
+        HBox mainUI = createMainUI(stage);
         root.getChildren().add(mainUI);
 
-        // 2. LOADING SCREEN
-        VBox loadingScreen = createLoadingScreen();
-        root.getChildren().add(loadingScreen);
-
-        Scene scene = new Scene(root, 800, 480);
+        scene = new Scene(root, 800, 480);
         scene.getStylesheets().add(getClass().getResource("/styles/zoodex.css").toExternalForm());
-
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
-        primaryStage.show();
-
-        // Boot Sequence Simulation (3 Seconds)
-        Timeline bootTimer = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
-            FadeTransition fadeOut = new FadeTransition(Duration.seconds(1), loadingScreen);
-            fadeOut.setFromValue(1.0);
-            fadeOut.setToValue(0.0);
-            fadeOut.setOnFinished(ev -> {
-                root.getChildren().remove(loadingScreen);
-                FadeTransition fadeIn = new FadeTransition(Duration.seconds(0.5), mainUI);
-                fadeIn.setFromValue(0.0);
-                fadeIn.setToValue(1.0);
-                fadeIn.play();
-            });
-            fadeOut.play();
-        }));
-        bootTimer.play();
     }
 
-    private VBox createLoadingScreen() {
-        VBox loadingScreen = new VBox(20);
-        loadingScreen.setAlignment(Pos.CENTER);
-        loadingScreen.getStyleClass().add("loading-screen");
-
-        try {
-            InputStream is = getClass().getResourceAsStream("/images/Attach0.png");
-            if (is != null) {
-                Image image = new Image(is);
-                ImageView imageView = new ImageView(image);
-                imageView.setFitWidth(400);
-                imageView.setPreserveRatio(true);
-                loadingScreen.getChildren().add(imageView);
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to load Attach0.png!");
-            e.printStackTrace();
-        }
-
-        Text loadingText = new Text("BOOTING ZOODEX SYSTEM...");
-        loadingText.getStyleClass().add("loading-text");
-        loadingScreen.getChildren().add(loadingText);
-
-        return loadingScreen;
+    public Scene getScene() {
+        return scene;
     }
 
-    private HBox createMainUI() {
+    private HBox createMainUI(Stage stage) {
         HBox mainUI = new HBox();
         mainUI.getStyleClass().add("pokedex-bg");
 
@@ -131,11 +77,16 @@ public class ZooDexGUI extends Application {
         cameraBezel.getChildren().add(cameraScreen);
 
         // Button
-        HBox btnContainer = new HBox();
+        HBox btnContainer = new HBox(10);
         btnContainer.setAlignment(Pos.CENTER);
-        Button scanBtn = new Button("SCAN");
+
+        Button backBtn = new Button("BACK");
+        backBtn.getStyleClass().add("scan-btn");
+        backBtn.setOnAction(e -> stage.setScene(new MainMenuView(stage).getScene()));
+
+        Button scanBtn = new Button("Take Photo");
         scanBtn.getStyleClass().add("scan-btn");
-        btnContainer.getChildren().add(scanBtn);
+        btnContainer.getChildren().addAll(backBtn, scanBtn);
 
         leftPanel.getChildren().addAll(ledContainer, cameraBezel, btnContainer);
 
@@ -217,9 +168,5 @@ public class ZooDexGUI extends Application {
         });
 
         return mainUI;
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

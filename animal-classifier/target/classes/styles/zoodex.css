@@ -1,0 +1,128 @@
+.root {
+    -fx-font-family: "Courier New";
+    -fx-background-color: #000000;
+}
+
+.pokedex-bg {
+    -fx-background-color: #dc0a2d;
+}
+
+.loading-screen {
+    -fx-background-color: #111111;
+}
+
+.loading-text {
+    -fx-fill: #ffffff;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+/* Panels */
+.left-panel {
+    -fx-padding: 20;
+    -fx-border-color: transparent #8b0000 transparent transparent;
+    -fx-border-width: 2;
+}
+
+.hinge {
+    -fx-background-color: linear-gradient(to right, #8b0000, #ff1a1a, #8b0000);
+    -fx-border-color: transparent #5a0000 transparent #5a0000;
+    -fx-border-width: 1;
+}
+
+.right-panel {
+    -fx-padding: 20;
+}
+
+/* LEDs */
+.led-big-blue {
+    -fx-background-color: radial-gradient(center 30% 30%, radius 50%, #5ce1e6, #007bff);
+    -fx-border-color: #ffffff;
+    -fx-border-width: 4;
+    -fx-border-radius: 50em;
+    -fx-background-radius: 50em;
+    -fx-pref-width: 70px;
+    -fx-pref-height: 70px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 123, 255, 0.8), 10, 0, 0, 0);
+}
+
+.led-small {
+    -fx-border-color: #555555;
+    -fx-border-width: 2;
+    -fx-background-radius: 50em;
+    -fx-border-radius: 50em;
+    -fx-pref-width: 20px;
+    -fx-pref-height: 20px;
+}
+
+.led-red { -fx-background-color: #ff0000; -fx-effect: dropshadow(three-pass-box, #ff0000, 5, 0, 0, 0); }
+.led-yellow { -fx-background-color: #ffcc00; -fx-effect: dropshadow(three-pass-box, #ffcc00, 5, 0, 0, 0); }
+.led-green { -fx-background-color: #33cc33; -fx-effect: dropshadow(three-pass-box, #33cc33, 5, 0, 0, 0); }
+
+/* Camera */
+.camera-bezel {
+    -fx-background-color: #dedede;
+    -fx-background-radius: 10 10 10 40;
+    -fx-padding: 20;
+}
+
+.camera-screen {
+    -fx-background-color: #222222;
+    -fx-border-color: #444444;
+    -fx-border-width: 3;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.placeholder-text {
+    -fx-fill: #666666;
+    -fx-font-size: 16px;
+}
+
+.scan-line {
+    -fx-background-color: #00ffcc;
+    -fx-effect: dropshadow(three-pass-box, #00ffcc, 10, 0, 0, 0);
+}
+
+/* Button */
+.scan-btn {
+    -fx-background-color: #ffcc00;
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-color: #b38f00;
+    -fx-border-width: 2;
+    -fx-padding: 10 30;
+    -fx-cursor: hand;
+}
+
+/* Data Screen */
+.data-screen {
+    -fx-background-color: #51ae5e;
+    -fx-border-color: #336b3b;
+    -fx-border-width: 4;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 15;
+}
+
+.animal-name {
+    -fx-fill: #000000;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.type-badge {
+    -fx-background-color: #333333;
+    -fx-fill: #ffffff;
+    -fx-padding: 4 8;
+    -fx-background-radius: 3;
+    -fx-font-size: 12px;
+}
+
+.animal-desc {
+    -fx-fill: #000000;
+    -fx-font-size: 14px;
+}

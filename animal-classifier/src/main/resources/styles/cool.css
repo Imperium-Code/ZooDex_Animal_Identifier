@@ -1,0 +1,159 @@
+/* zooDex Blue + Gray Theme */
+
+.root {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-background-color: linear-gradient(to bottom, #dbe5f0, #b9c7d8);
+}
+
+/* Top title / header text */
+.label {
+    -fx-text-fill: #1f2d3d;
+}
+
+/* Main title styling */
+.title-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #24476b;
+}
+
+/* General buttons */
+.button {
+    -fx-background-color: linear-gradient(to bottom, #6f8fb3, #4f6d8c);
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 24;
+    -fx-border-radius: 24;
+    -fx-padding: 10 20 10 20;
+    -fx-border-color: #3c536b;
+    -fx-border-width: 2;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #86a6ca, #5f7e9d);
+}
+
+.button:pressed {
+    -fx-background-color: #415a73;
+}
+
+/* Secondary / smaller buttons */
+.small-button {
+    -fx-font-size: 12px;
+    -fx-padding: 8 14 8 14;
+    -fx-background-radius: 12;
+}
+
+/* Panels / cards / boxes */
+.vbox, .hbox, .pane, .stack-pane, .anchor-pane, .border-pane, .grid-pane {
+    -fx-background-color: transparent;
+}
+
+/* Card-style container */
+.card {
+    -fx-background-color: rgba(245, 248, 252, 0.95);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: #8ea3b8;
+    -fx-border-width: 2;
+    -fx-padding: 16;
+}
+
+/* Text fields */
+.text-field, .text-area {
+    -fx-background-color: #eef3f8;
+    -fx-text-fill: #22313f;
+    -fx-prompt-text-fill: #6f7f8f;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #8ea3b8;
+    -fx-border-width: 1.5;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: #4f81bd;
+    -fx-background-color: #f7fbff;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-background-color: #eef3f8;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #8ea3b8;
+    -fx-border-width: 1.5;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: #22313f;
+}
+
+/* ListView */
+.list-view {
+    -fx-background-color: #eef3f8;
+    -fx-border-color: #8ea3b8;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #22313f;
+}
+
+.list-cell:filled:selected {
+    -fx-background-color: #9bb4cf;
+    -fx-text-fill: #1c2833;
+}
+
+/* ScrollPane */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Animal info labels */
+.info-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #31485f;
+}
+
+.name-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2b4f73;
+}
+
+/* Section headers */
+.section-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3a5f86;
+}
+
+/* Optional image-button styling for caught animals */
+.animal-button {
+    -fx-background-color: linear-gradient(to bottom, #d8e3ee, #bccad8);
+    -fx-text-fill: #233445;
+    -fx-font-weight: bold;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #8095ab;
+    -fx-border-width: 2;
+    -fx-padding: 12;
+}
+
+.animal-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #e4edf6, #c8d5e2);
+}
+
+/* Footer / subtle text */
+.subtle-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #607080;
+}
