@@ -18,11 +18,19 @@ import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class ZooDexGUI {
 
     private boolean isScanning = false;
     private Scene scene;
+    private Process liveFeedProcess;
+    private Thread liveFeedThread;
+    private ImageView liveFeedView;
 
     public ZooDexGUI(Stage stage) {
 
@@ -70,8 +78,10 @@ public class ZooDexGUI {
         StackPane cameraScreen = new StackPane();
         cameraScreen.getStyleClass().add("camera-screen");
         VBox.setVgrow(cameraScreen, Priority.ALWAYS);
-        Text placeholder = new Text("CAMERA FEED OFFLINE");
-        placeholder.getStyleClass().add("placeholder-text");
+        liveFeedView = new ImageView();
+        liveFeedView.setFitWidth(200);
+        liveFeedView.setFitHeight(150);
+        liveFeedView.setPreserveRatio(true);
 
         Region scanLine = new Region();
         scanLine.getStyleClass().add("scan-line");
@@ -79,7 +89,7 @@ public class ZooDexGUI {
         scanLine.setMaxHeight(5);
         scanLine.setVisible(false);
         StackPane.setAlignment(scanLine, Pos.TOP_CENTER);
-        cameraScreen.getChildren().addAll(placeholder, scanLine);
+        cameraScreen.getChildren().addAll(liveFeedView, scanLine);
         cameraBezel.getChildren().add(cameraScreen);
 
         // Button
@@ -88,7 +98,10 @@ public class ZooDexGUI {
 
         Button backBtn = new Button("BACK");
         backBtn.getStyleClass().add("scan-btn");
-        backBtn.setOnAction(e -> stage.setScene(new MainMenuView(stage).getScene()));
+        backBtn.setOnAction(e -> {
+            stopLiveFeed();
+            stage.setScene(new MainMenuView(stage).getScene());
+        });
 
         Button scanBtn = new Button("Take Photo");
         scanBtn.getStyleClass().add("scan-btn");
@@ -140,6 +153,8 @@ public class ZooDexGUI {
                 return;
             isScanning = true;
 
+            stopLiveFeed(); // Pause the camera for photo
+
             scanLine.setVisible(true);
             scanAnim.playFromStart();
 
@@ -152,7 +167,8 @@ public class ZooDexGUI {
                 protected Void call() throws Exception {
                     try {
                         // 1. Take photo
-                        ProcessBuilder pb = new ProcessBuilder("rpicam-still", "-o", "capture.jpg", "-t", "1000", "--nopreview");
+                        ProcessBuilder pb = new ProcessBuilder("rpicam-still", "-o", "capture.jpg", "-t", "1000",
+                                "--nopreview");
                         Process p = pb.start();
                         int exitCode = p.waitFor();
                         if (exitCode != 0) {
@@ -173,7 +189,8 @@ public class ZooDexGUI {
                         });
 
                         // 3. Classify
-                        AnimalOrNotDL4J.ClassificationResult result = AnimalOrNotDL4J.classifyImage(new File("processed.png"));
+                        AnimalOrNotDL4J.ClassificationResult result = AnimalOrNotDL4J
+                                .classifyImage(new File("processed.png"));
 
                         // 4. Update UI
                         Platform.runLater(() -> {
@@ -184,8 +201,9 @@ public class ZooDexGUI {
                                 animalName.setText(result.animalResult.animalName.toUpperCase());
                                 typeText.setText("ANIMAL DETECTED");
                                 typeText.setVisible(true);
-                                
-                                String descText = String.format("Confidence Score: %.2f%%", result.animalResult.score * 100);
+
+                                String descText = String.format("Confidence Score: %.2f%%",
+                                        result.animalResult.score * 100);
                                 animalDesc.setText("");
 
                                 // Typewriter effect
@@ -197,13 +215,17 @@ public class ZooDexGUI {
                                                 animalDesc.setText(animalDesc.getText() + descText.charAt(idx));
                                             }));
                                 }
-                                typewriter.setOnFinished(f -> isScanning = false);
+                                typewriter.setOnFinished(f -> {
+                                    isScanning = false;
+                                    startLiveFeed();
+                                });
                                 typewriter.play();
                             } else {
                                 animalName.setText("UNKNOWN");
                                 typeText.setVisible(false);
                                 animalDesc.setText("No animal detected or confidence too low.");
                                 isScanning = false;
+                                startLiveFeed();
                             }
                         });
 
@@ -216,6 +238,7 @@ public class ZooDexGUI {
                             typeText.setVisible(false);
                             animalDesc.setText(ex.getMessage());
                             isScanning = false;
+                            startLiveFeed();
                         });
                     }
                     return null;
@@ -224,6 +247,73 @@ public class ZooDexGUI {
             new Thread(backendTask).start();
         });
 
+        startLiveFeed();
         return mainUI;
+    }
+
+    private void startLiveFeed() {
+        if (liveFeedProcess != null)
+            return;
+
+        Task<Void> feedTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                try {
+                    ProcessBuilder pb = new ProcessBuilder("rpicam-vid", "-t", "0", "--codec", "mjpeg", "--width",
+                            "200", "--height", "150", "--framerate", "15", "--nopreview", "-o", "-");
+                    pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+                    liveFeedProcess = pb.start();
+                    InputStream is = liveFeedProcess.getInputStream();
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    int prev = -1;
+                    int b;
+                    boolean inJpeg = false;
+
+                    while ((b = is.read()) != -1) {
+                        if (isCancelled())
+                            break;
+
+                        if (!inJpeg) {
+                            if (prev == 0xFF && b == 0xD8) {
+                                inJpeg = true;
+                                baos.write(0xFF);
+                                baos.write(0xD8);
+                            }
+                        } else {
+                            baos.write(b);
+                            if (prev == 0xFF && b == 0xD9) {
+                                inJpeg = false;
+                                byte[] imageBytes = baos.toByteArray();
+                                baos.reset();
+                                Platform.runLater(() -> {
+                                    Image img = new Image(new ByteArrayInputStream(imageBytes));
+                                    if (liveFeedView != null)
+                                        liveFeedView.setImage(img);
+                                });
+                            }
+                        }
+                        prev = b;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+        liveFeedThread = new Thread(feedTask);
+        liveFeedThread.setDaemon(true);
+        liveFeedThread.start();
+    }
+
+    private void stopLiveFeed() {
+        if (liveFeedThread != null) {
+            liveFeedThread.interrupt();
+            liveFeedThread = null;
+        }
+        if (liveFeedProcess != null) {
+            liveFeedProcess.destroy();
+            liveFeedProcess = null;
+        }
     }
 }
