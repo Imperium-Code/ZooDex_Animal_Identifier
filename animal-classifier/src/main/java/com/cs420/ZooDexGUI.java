@@ -4,6 +4,9 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,6 +15,9 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.File;
+import java.io.IOException;
 
 public class ZooDexGUI {
 
@@ -137,34 +143,85 @@ public class ZooDexGUI {
             scanLine.setVisible(true);
             scanAnim.playFromStart();
 
-            animalName.setText("SCANNING...");
-            animalDesc.setText("Analyzing structural data...");
+            animalName.setText("TAKING PHOTO...");
+            animalDesc.setText("Initializing camera module...");
             typeText.setVisible(false);
 
-            Timeline mockBackendDelay = new Timeline(new KeyFrame(Duration.seconds(4), ev -> {
-                scanAnim.stop();
-                scanLine.setVisible(false);
+            Task<Void> backendTask = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    try {
+                        // 1. Take photo
+                        ProcessBuilder pb = new ProcessBuilder("rpicam-still", "-o", "capture.jpg", "-t", "1000", "--nopreview");
+                        Process p = pb.start();
+                        int exitCode = p.waitFor();
+                        if (exitCode != 0) {
+                            throw new RuntimeException("Camera process exited with code " + exitCode);
+                        }
 
-                animalName.setText("Red Panda");
-                typeText.setText("TYPE: MAMMAL");
-                typeText.setVisible(true);
+                        Platform.runLater(() -> {
+                            animalName.setText("PROCESSING...");
+                            animalDesc.setText("Formatting image data...");
+                        });
 
-                String descText = "A small arboreal mammal native to the eastern Himalayas. It has reddish-brown fur and a long, shaggy tail.";
-                animalDesc.setText("");
+                        // 2. Preprocess image
+                        ImagePreprocessing.preprocessImage("capture.jpg", "processed.png");
 
-                // Typewriter effect
-                Timeline typewriter = new Timeline();
-                for (int i = 0; i < descText.length(); i++) {
-                    final int idx = i;
-                    typewriter.getKeyFrames().add(
-                            new KeyFrame(Duration.millis(20 * i), event -> {
-                                animalDesc.setText(animalDesc.getText() + descText.charAt(idx));
-                            }));
+                        Platform.runLater(() -> {
+                            animalName.setText("ANALYZING...");
+                            animalDesc.setText("Running neural network classification...");
+                        });
+
+                        // 3. Classify
+                        AnimalOrNotDL4J.ClassificationResult result = AnimalOrNotDL4J.classifyImage(new File("processed.png"));
+
+                        // 4. Update UI
+                        Platform.runLater(() -> {
+                            scanAnim.stop();
+                            scanLine.setVisible(false);
+
+                            if (result.animalResult.isAnimal) {
+                                animalName.setText(result.animalResult.animalName.toUpperCase());
+                                typeText.setText("ANIMAL DETECTED");
+                                typeText.setVisible(true);
+                                
+                                String descText = String.format("Confidence Score: %.2f%%", result.animalResult.score * 100);
+                                animalDesc.setText("");
+
+                                // Typewriter effect
+                                Timeline typewriter = new Timeline();
+                                for (int i = 0; i < descText.length(); i++) {
+                                    final int idx = i;
+                                    typewriter.getKeyFrames().add(
+                                            new KeyFrame(Duration.millis(20 * i), event -> {
+                                                animalDesc.setText(animalDesc.getText() + descText.charAt(idx));
+                                            }));
+                                }
+                                typewriter.setOnFinished(f -> isScanning = false);
+                                typewriter.play();
+                            } else {
+                                animalName.setText("UNKNOWN");
+                                typeText.setVisible(false);
+                                animalDesc.setText("No animal detected or confidence too low.");
+                                isScanning = false;
+                            }
+                        });
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Platform.runLater(() -> {
+                            scanAnim.stop();
+                            scanLine.setVisible(false);
+                            animalName.setText("ERROR");
+                            typeText.setVisible(false);
+                            animalDesc.setText(ex.getMessage());
+                            isScanning = false;
+                        });
+                    }
+                    return null;
                 }
-                typewriter.setOnFinished(f -> isScanning = false);
-                typewriter.play();
-            }));
-            mockBackendDelay.play();
+            };
+            new Thread(backendTask).start();
         });
 
         return mainUI;

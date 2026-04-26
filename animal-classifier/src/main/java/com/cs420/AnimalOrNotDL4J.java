@@ -59,23 +59,21 @@ Java util package, our basic methods
 https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/package-summary.html
 */
 
-
-
 public class AnimalOrNotDL4J {
 
     // Basic classifier settings:
     // TOP_K = how many of the model's best guesses we want to inspect
-    // MIN_ANIMAL_SCORE = minimum combined confidence needed before we call something an animal
+    // MIN_ANIMAL_SCORE = minimum combined confidence needed before we call
+    // something an animal
     private static final int TOP_K = 12;
     private static final double MIN_ANIMAL_SCORE = 0.12; // if too low -> "not an animal"
-
-
 
     // ------------------ Animal mapping logic ------------------
 
     public static ClassificationResult classifyImage(File imageFile) throws Exception {
         // 1) Load a pretrained ResNet50 model
-        // ResNet50 is already trained on ImageNet, so we do not train our own model here.
+        // ResNet50 is already trained on ImageNet, so we do not train our own model
+        // here.
         // We are reusing an existing model and asking it to classify our image.
         ZooModel<?> zooModel = ResNet50.builder().build();
         Model model = zooModel.initPretrained();
@@ -87,8 +85,10 @@ public class AnimalOrNotDL4J {
         INDArray image = loader.asMatrix(imageFile);
 
         // 3) Preprocess the image
-        // This step transforms pixel values into the format expected by the pretrained network.
-        // We use the same preprocessing style commonly used for ImageNet/VGG-style models.
+        // This step transforms pixel values into the format expected by the pretrained
+        // network.
+        // We use the same preprocessing style commonly used for ImageNet/VGG-style
+        // models.
         VGG16ImagePreProcessor scaler = new VGG16ImagePreProcessor();
         scaler.transform(image);
 
@@ -111,7 +111,8 @@ public class AnimalOrNotDL4J {
         double[] p = probs.toDoubleVector();
 
         // 5) Decode the top-K labels
-        // ImageNetLabels lets us convert class indices like 341 into readable names like "hog".
+        // ImageNetLabels lets us convert class indices like 341 into readable names
+        // like "hog".
         ImageNetLabels labels = new ImageNetLabels();
 
         // Get the indices of the top K highest probabilities
@@ -148,7 +149,8 @@ public class AnimalOrNotDL4J {
         public double[] probabilities;
         public ImageNetLabels labels;
 
-        public ClassificationResult(AnimalResult animalResult, int[] topKIndices, double[] probabilities, ImageNetLabels labels) {
+        public ClassificationResult(AnimalResult animalResult, int[] topKIndices, double[] probabilities,
+                ImageNetLabels labels) {
             this.animalResult = animalResult;
             this.topKIndices = topKIndices;
             this.probabilities = probabilities;

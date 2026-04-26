@@ -24,14 +24,12 @@ public class ImagePreprocessing {
         try {
             File inputFile = new File(inputPath);
             if (!inputFile.exists()) {
-                System.err.println("Error: Could not read image from " + inputPath);
-                System.exit(1);
+                throw new RuntimeException("Error: Could not read image from " + inputPath);
             }
 
             BufferedImage originalImage = ImageIO.read(inputFile);
             if (originalImage == null) {
-                System.err.println("Error: Could not interpret image from " + inputPath);
-                System.exit(1);
+                throw new RuntimeException("Error: Could not interpret image from " + inputPath);
             }
 
             // Create a grayscale BufferedImage of size 128x128
@@ -59,14 +57,14 @@ public class ImagePreprocessing {
             if (success) {
                 System.out.println("Successfully processed: " + outputPath);
             } else {
-                System.err.println("Error: Could not write image to " + outputPath + " (format support issue?)");
-                System.exit(1);
+                throw new RuntimeException("Error: Could not write image to " + outputPath + " (format support issue?)");
             }
 
         } catch (Exception e) {
-            System.err.println("Error processing " + inputPath + ": " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1); // Return non-zero status on exception
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            }
+            throw new RuntimeException("Error processing " + inputPath + ": " + e.getMessage(), e);
         }
     }
 }
