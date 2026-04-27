@@ -21,6 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -191,6 +197,27 @@ public class ZooDexGUI {
                         // 3. Classify
                         AnimalOrNotDL4J.ClassificationResult result = AnimalOrNotDL4J
                                 .classifyImage(new File("processed.png"));
+
+                        // Save the capture and its classification data
+                        String timestamp = String.valueOf(System.currentTimeMillis());
+                        Path capturesDir = Paths.get("captures");
+                        if (!Files.exists(capturesDir)) {
+                            Files.createDirectories(capturesDir);
+                        }
+                        
+                        Path savedImagePath = capturesDir.resolve("capture_" + timestamp + ".jpg");
+                        Files.copy(Paths.get("capture.jpg"), savedImagePath, StandardCopyOption.REPLACE_EXISTING);
+                        
+                        Path savedDataPath = capturesDir.resolve("capture_" + timestamp + ".txt");
+                        try (PrintWriter out = new PrintWriter(new FileWriter(savedDataPath.toFile()))) {
+                            if (result.animalResult.isAnimal) {
+                                out.println(result.animalResult.animalName.toUpperCase());
+                                out.println(String.format("Confidence Score: %.2f%%", result.animalResult.score * 100));
+                            } else {
+                                out.println("UNKNOWN");
+                                out.println("No animal detected or confidence too low.");
+                            }
+                        }
 
                         // 4. Update UI
                         Platform.runLater(() -> {

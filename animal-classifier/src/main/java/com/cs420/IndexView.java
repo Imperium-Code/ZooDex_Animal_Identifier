@@ -5,10 +5,18 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 public class IndexView {
 
@@ -23,8 +31,12 @@ public class IndexView {
         Label animalBioLabel = new Label("Its name and bio will appear here.");
         animalBioLabel.setWrapText(true);
         animalBioLabel.setId("animalBioLabel");
+        
+        ImageView detailImageView = new ImageView();
+        detailImageView.setFitWidth(200);
+        detailImageView.setPreserveRatio(true);
 
-        VBox detailPanel = new VBox(15, animalNameLabel, animalBioLabel);
+        VBox detailPanel = new VBox(15, detailImageView, animalNameLabel, animalBioLabel);
         detailPanel.setPadding(new Insets(20));
         detailPanel.setAlignment(Pos.TOP_CENTER);
         detailPanel.setPrefWidth(250);
@@ -37,53 +49,58 @@ public class IndexView {
         grid.setAlignment(Pos.CENTER);
         grid.setId("animalGrid");
 
-        // Placeholder animal data
-        String[] animalNames = {
-                "Fox", "Rabbit", "Owl", "Deer",
-                "Bear", "Frog", "Turtle", "Squirrel",
-                "Raccoon", "Hawk", "Skunk", "Mouse"
-        };
+        File capturesDir = new File("captures");
+        File[] files = capturesDir.exists() ? capturesDir.listFiles((dir, name) -> name.endsWith(".jpg")) : new File[0];
 
-        String[] animalBios = {
-                "Foxes are clever mammals known for their fluffy tails and quick movements.",
-                "Rabbits are small herbivores with long ears and strong back legs.",
-                "Owls are birds of prey that are often active at night.",
-                "Deer are graceful herbivores often found in forests and fields.",
-                "Bears are large mammals that can be powerful, curious, and intelligent.",
-                "Frogs are amphibians that live near water and have strong jumping legs.",
-                "Turtles are reptiles with protective shells and slow, steady movements.",
-                "Squirrels are energetic rodents often seen climbing trees.",
-                "Raccoons are smart mammals known for their masked faces and dexterous paws.",
-                "Hawks are sharp-eyed birds of prey that soar high in the sky.",
-                "Skunks are mammals known for their black-and-white coloring and strong spray defense.",
-                "Mice are tiny rodents that are quick and adaptable."
-        };
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                File imgFile = files[i];
+                Button animalButton = new Button();
+                animalButton.setPrefSize(120, 120);
 
-        for (int i = 0; i < animalNames.length; i++) {
-            Button animalButton = new Button();
-            animalButton.setPrefSize(120, 120);
-            animalButton.setWrapText(true);
+                ImageView thumbnail = new ImageView(new Image(imgFile.toURI().toString(), 100, 100, true, true));
+                animalButton.setGraphic(thumbnail);
 
-            // Placeholder text for now
-            animalButton.setText(animalNames[i]);
+                String baseName = imgFile.getName().substring(0, imgFile.getName().lastIndexOf('.'));
+                File txtFile = new File(capturesDir, baseName + ".txt");
 
-            final String selectedName = animalNames[i];
-            final String selectedBio = animalBios[i];
+                String animalName = "Unknown";
+                String animalBio = "No data available.";
 
-            animalButton.setOnAction(e -> {
-                animalNameLabel.setText(selectedName);
-                animalBioLabel.setText(selectedBio);
-            });
+                if (txtFile.exists()) {
+                    try {
+                        List<String> lines = Files.readAllLines(txtFile.toPath());
+                        if (lines.size() >= 1) animalName = lines.get(0);
+                        if (lines.size() >= 2) animalBio = lines.get(1);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
 
-            int col = i % 4;
-            int row = i / 4;
-            grid.add(animalButton, col, row);
+                final String selectedName = animalName;
+                final String selectedBio = animalBio;
+                final String imgUri = imgFile.toURI().toString();
+
+                animalButton.setOnAction(e -> {
+                    detailImageView.setImage(new Image(imgUri));
+                    animalNameLabel.setText(selectedName);
+                    animalBioLabel.setText(selectedBio);
+                });
+
+                int col = i % 4;
+                int row = i / 4;
+                grid.add(animalButton, col, row);
+            }
         }
+
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent;");
 
         Button backButton = new Button("Back to Menu");
         backButton.setOnAction(e -> stage.setScene(new MainMenuView(stage).getScene()));
 
-        VBox leftSection = new VBox(15, title, grid, backButton);
+        VBox leftSection = new VBox(15, title, scrollPane, backButton);
         leftSection.setAlignment(Pos.CENTER);
         leftSection.setPadding(new Insets(20));
 
