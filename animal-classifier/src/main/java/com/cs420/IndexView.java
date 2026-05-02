@@ -31,7 +31,7 @@ public class IndexView {
         Label animalBioLabel = new Label("Its name and bio will appear here.");
         animalBioLabel.setWrapText(true);
         animalBioLabel.setId("animalBioLabel");
-        
+
         ImageView detailImageView = new ImageView();
         detailImageView.setFitWidth(200);
         detailImageView.setPreserveRatio(true);
@@ -70,8 +70,10 @@ public class IndexView {
                 if (txtFile.exists()) {
                     try {
                         List<String> lines = Files.readAllLines(txtFile.toPath());
-                        if (lines.size() >= 1) animalName = lines.get(0);
-                        if (lines.size() >= 2) animalBio = lines.get(1);
+                        if (lines.size() >= 1)
+                            animalName = lines.get(0);
+                        if (lines.size() >= 2)
+                            animalBio = lines.get(1);
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }

@@ -204,10 +204,10 @@ public class ZooDexGUI {
                         if (!Files.exists(capturesDir)) {
                             Files.createDirectories(capturesDir);
                         }
-                        
+
                         Path savedImagePath = capturesDir.resolve("capture_" + timestamp + ".jpg");
                         Files.copy(Paths.get("capture.jpg"), savedImagePath, StandardCopyOption.REPLACE_EXISTING);
-                        
+
                         Path savedDataPath = capturesDir.resolve("capture_" + timestamp + ".txt");
                         try (PrintWriter out = new PrintWriter(new FileWriter(savedDataPath.toFile()))) {
                             if (result.animalResult.isAnimal) {

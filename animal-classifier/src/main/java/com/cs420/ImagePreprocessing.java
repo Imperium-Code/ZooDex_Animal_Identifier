@@ -57,7 +57,8 @@ public class ImagePreprocessing {
             if (success) {
                 System.out.println("Successfully processed: " + outputPath);
             } else {
-                throw new RuntimeException("Error: Could not write image to " + outputPath + " (format support issue?)");
+                throw new RuntimeException(
+                        "Error: Could not write image to " + outputPath + " (format support issue?)");
             }
 
         } catch (Exception e) {
