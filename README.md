@@ -22,8 +22,8 @@ The goal of this project was to design and implement a complete software applica
  
 ## My Contributions:
 This was a collaborative team project. My primary contributions included:
-  - Designed and assembled the handheld Raspberry Pi setup used to run the application in a portable form factor.
-  - Integrated the full software system onto the Raspberry Pi and ensured that the application functioned correctly in the target hardware environment.
+  - Designed and assembled the handheld Raspberry Pi (Pi 5) setup used to run the application in a portable form factor.
+  - Integrated the full software system onto the Raspberry Pi (Pi 5) and ensured that the application functioned correctly in the target hardware environment.
   - Assisted with debugging and code verification by reviewing teammates' implementations and helping identify and resolve issues.
-  - Supported development efforts across multiple areas, including GUI functionality and image recognition features.
+  - Supported development efforts across multiple areas, including GUI functionality and image recognition features (OpenCV).
   - Collaborated with team members to improve code quality, troubleshoot problems, and ensure successful integration of individual components into the final product.
