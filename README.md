@@ -1,5 +1,10 @@
 # ZooDex: Animal Identifier
 
+# Images
+![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_one.jpg)
+![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_two.jpg)
+![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_three.jpg)
+
 ## Overview:
 ZooDex is an animal identification application developed for a Software Engineering group project.
 Through the use of a group created handheld device running off a Raspberry Pi 5 system, the application allows users to identify animals and save all animals you have collected information on into a saved database.
