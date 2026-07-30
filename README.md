@@ -1,9 +1,7 @@
 # ZooDex: Animal Identifier
 
-# Images
+# Images (Please Excuse Low Resolution)
 ![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_one.jpg)
-![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_two.jpg)
-![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_three.jpg)
 
 ## Overview:
 ZooDex is an animal identification application developed for a Software Engineering group project.
@@ -32,3 +30,7 @@ This was a collaborative team project. My primary contributions included:
   - Assisted with debugging and code verification by reviewing teammates' implementations and helping identify and resolve issues.
   - Supported development efforts across multiple areas, including GUI functionality and image recognition features (OpenCV).
   - Collaborated with team members to improve code quality, troubleshoot problems, and ensure successful integration of individual components into the final product.
+
+# Extra Images (Please Excuse Low Resolution)
+![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_two.jpg)
+![Raspberry Pi Handheld Setup Identifying Pig](assets/screenshots/device_three.jpg)
